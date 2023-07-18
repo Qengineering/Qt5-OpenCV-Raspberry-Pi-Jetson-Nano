@@ -1,10 +1,37 @@
 #include "myvideocapture.h"
 #include <QDebug>
 
+std::string gstreamer_pipeline(int capture_width, int capture_height, int framerate, int display_width, int display_height) {
+    return
+            " libcamerasrc ! video/x-raw, "
+            " width=(int)" + std::to_string(capture_width) + ","
+            " height=(int)" + std::to_string(capture_height) + ","
+            " framerate=(fraction)" + std::to_string(framerate) +"/1 !"
+            " videoconvert ! videoscale !"
+            " video/x-raw,"
+            " width=(int)" + std::to_string(display_width) + ","
+            " height=(int)" + std::to_string(display_height) + " ! appsink";
+}
+
 MyVideoCapture::MyVideoCapture(QObject *parent)
     :QThread { parent }
-    ,mVideoCap { ID_CAMERA }
 {
+    //pipeline parameters
+    int capture_width = 640; //1280 ;
+    int capture_height = 480; //720 ;
+    int framerate = 15 ;
+    int display_width = 640; //1280 ;
+    int display_height = 480; //720 ;
+
+    //reset frame average
+    std::string pipeline = gstreamer_pipeline(capture_width, capture_height, framerate,
+                                              display_width, display_height);
+
+    //  Raspberry Pi Bullseye
+    mVideoCap.open(pipeline, cv::CAP_GSTREAMER);
+
+    //  Raspberry Pi Buster or Jetson Nano
+//  mVideoCap.open( ID_CAMERA );
 }
 
 void MyVideoCapture::run()
